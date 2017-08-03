@@ -50,43 +50,52 @@ public class ConvexGridGonFinder {
         // Try all sets of points
         List<Double> x = new ArrayList<>(xCoords);
         List<Double> y = new ArrayList<>(yCoords);
-        
+
         return recursiveBruteForce(new ArrayList<>(), x, y);
     }
-    
+
     private static List<Point2D.Double> recursiveBruteForce(List<Point2D.Double> points, List<Double> xCoords, List<Double> yCoords) {
         //System.out.println("  rbf. points: " + points + " x: " + xCoords + " y: " + yCoords);
-        
+
         if (xCoords.isEmpty()) {
-            return points;
+            return new ArrayList(points);
         }
-        
+
+        List<Point2D.Double> largest = new ArrayList(points);
+
         // Try all y-coordinates for the next x-coordinate
         double x = xCoords.remove(xCoords.size() - 1);
-        
+
+        // or skip this x
+        List<Point2D.Double> gridGon = recursiveBruteForce(points, xCoords, yCoords);
+
+        if (gridGon.size() > largest.size()) {
+            largest = gridGon;
+        }
+
         for (int i = 0; i < yCoords.size(); i++) {
             double y = yCoords.get(i);
-            
+
             points.add(new Point2D.Double(x, y));
-            
+
             if (ConvexUtils.isConvex(points)) {
                 yCoords.remove(i);
-                
-                List<Point2D.Double> gridGon = recursiveBruteForce(points, xCoords, yCoords);
-                
-                if (gridGon != null) {
-                    return gridGon;
+
+                gridGon = recursiveBruteForce(points, xCoords, yCoords);
+
+                if (gridGon.size() > largest.size()) {
+                    largest = gridGon;
                 }
-                
+
                 yCoords.add(i, y);
             }
-            
+
             points.remove(points.size() - 1);
         }
-        
+
         xCoords.add(x);
-        
-        return null; // No valid gridgon found
+
+        return largest; // No valid gridgon found
     }
 
     private static List<Point2D.Double> exponentialBruteForce(Set<Double> xCoords, Set<Double> yCoords) {
