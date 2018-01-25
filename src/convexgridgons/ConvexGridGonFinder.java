@@ -2,8 +2,8 @@ package convexgridgons;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class ConvexGridGonFinder {
 
@@ -14,28 +14,29 @@ public class ConvexGridGonFinder {
     private static final Algorithm DEFAULT_ALGORITHM = Algorithm.PURE_BRUTE_FORCE;
 
     /**
-     * Returns a convex polygon whose vertices have the given x- and
-     * y-coordinates, or null if no such polygon exists.
+     * Returns the largest convex polygon whose vertices have the given x- and
+     * y-coordinates.
      *
      * @param xCoords
      * @param yCoords
      * @return
      */
-    public static List<Point2D.Double> findConvexGridGon(Set<Double> xCoords, Set<Double> yCoords) {
-        return findConvexGridGon(xCoords, yCoords, DEFAULT_ALGORITHM);
+    public static List<Point2D.Double> findLargestConvexGridGon(Collection<Double> xCoords, Collection<Double> yCoords) {
+        return findLargestConvexGridGon(xCoords, yCoords, DEFAULT_ALGORITHM);
     }
 
     /**
-     * Returns a convex polygon whose vertices have the given x- and
-     * y-coordinates, or null if no such polygon exists.
+     * Returns the largest convex polygon whose vertices have the given x- and
+     * y-coordinates.
      *
      * Uses the specified algorithm.
      *
      * @param xCoords
      * @param yCoords
+     * @param alg
      * @return
      */
-    public static List<Point2D.Double> findConvexGridGon(Set<Double> xCoords, Set<Double> yCoords, Algorithm alg) {
+    public static List<Point2D.Double> findLargestConvexGridGon(Collection<Double> xCoords, Collection<Double> yCoords, Algorithm alg) {
         switch (alg) {
             case EXPONENTIAL_BRUTE_FORCE:
                 return exponentialBruteForce(xCoords, yCoords);
@@ -46,31 +47,35 @@ public class ConvexGridGonFinder {
         }
     }
 
-    private static List<Point2D.Double> pureBruteForce(Set<Double> xCoords, Set<Double> yCoords) {
+    private static List<Point2D.Double> pureBruteForce(Collection<Double> xCoords, Collection<Double> yCoords) {
         // Try all sets of points
         List<Double> x = new ArrayList<>(xCoords);
         List<Double> y = new ArrayList<>(yCoords);
 
-        return recursiveBruteForce(new ArrayList<>(), x, y);
+        return recursiveBruteForce(new ArrayList<>(), x, y, 0);
     }
 
-    private static List<Point2D.Double> recursiveBruteForce(List<Point2D.Double> points, List<Double> xCoords, List<Double> yCoords) {
+    private static List<Point2D.Double> recursiveBruteForce(List<Point2D.Double> points, List<Double> xCoords, List<Double> yCoords, int largestSize) {
         //System.out.println("  rbf. points: " + points + " x: " + xCoords + " y: " + yCoords);
 
-        if (xCoords.isEmpty()) {
-            return new ArrayList(points);
+        if (xCoords.isEmpty() || largestSize >= points.size() + Math.min(xCoords.size(), yCoords.size())) {
+            return new ArrayList<>(points);
         }
 
-        List<Point2D.Double> largest = new ArrayList(points);
+        List<Point2D.Double> largestGridgon = new ArrayList<>(points);
 
         // Try all y-coordinates for the next x-coordinate
         double x = xCoords.remove(xCoords.size() - 1);
 
         // or skip this x
-        List<Point2D.Double> gridGon = recursiveBruteForce(points, xCoords, yCoords);
+        List<Point2D.Double> gridgon = recursiveBruteForce(points, xCoords, yCoords, largestSize);
 
-        if (gridGon.size() > largest.size()) {
-            largest = gridGon;
+        if (gridgon.size() > largestGridgon.size()) {
+            largestGridgon = gridgon;
+
+            if (largestGridgon.size() > largestSize) {
+                largestSize = largestGridgon.size();
+            }
         }
 
         for (int i = 0; i < yCoords.size(); i++) {
@@ -81,10 +86,14 @@ public class ConvexGridGonFinder {
             if (ConvexUtils.isConvex(points)) {
                 yCoords.remove(i);
 
-                gridGon = recursiveBruteForce(points, xCoords, yCoords);
+                List<Point2D.Double> gridGon = recursiveBruteForce(points, xCoords, yCoords, largestSize);
 
-                if (gridGon.size() > largest.size()) {
-                    largest = gridGon;
+                if (gridGon.size() > largestGridgon.size()) {
+                    largestGridgon = gridGon;
+
+                    if (largestGridgon.size() > largestSize) {
+                        largestSize = largestGridgon.size();
+                    }
                 }
 
                 yCoords.add(i, y);
@@ -95,10 +104,10 @@ public class ConvexGridGonFinder {
 
         xCoords.add(x);
 
-        return largest; // No valid gridgon found
+        return largestGridgon;
     }
 
-    private static List<Point2D.Double> exponentialBruteForce(Set<Double> xCoords, Set<Double> yCoords) {
+    private static List<Point2D.Double> exponentialBruteForce(Collection<Double> xCoords, Collection<Double> yCoords) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
