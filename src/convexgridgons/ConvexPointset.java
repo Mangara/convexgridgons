@@ -4,6 +4,7 @@ package convexgridgons;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,9 +97,7 @@ public class ConvexPointset {
     }
 
     private static List<Point2D.Double> valtrMethod(int n) {
-        List<Point2D.Double> points = new ArrayList<>(n);
-
-        // Generate x and y coordinates
+        // Generate two lists of random X and Y coordinates
         List<Double> xPool = new ArrayList<>(n);
         List<Double> yPool = new ArrayList<>(n);
 
@@ -107,88 +106,72 @@ public class ConvexPointset {
             yPool.add(RAND.nextDouble());
         }
 
-        //System.out.println("xPool: " + xPool);
-        //System.out.println("yPool: " + yPool);
-        // Sort
+        // Sort them
         Collections.sort(xPool);
         Collections.sort(yPool);
 
-        //System.out.println("xPool: " + xPool);
-        //System.out.println("yPool: " + yPool);
-        // Find min and max
+        // Isolate the extreme points
         Double minX = xPool.get(0);
         Double maxX = xPool.get(n - 1);
         Double minY = yPool.get(0);
         Double maxY = yPool.get(n - 1);
 
-        // Randomly assign to top and bottom / left and right chains and convert to vectors
+        // Divide the interior points into two chains & Extract the vector components
         List<Double> xVec = new ArrayList<>(n);
         List<Double> yVec = new ArrayList<>(n);
 
         double lastTop = minX, lastBot = minX;
 
-        //System.out.print("x: ");
         for (int i = 1; i < n - 1; i++) {
             double x = xPool.get(i);
 
             if (RAND.nextBoolean()) {
-                //System.out.print("top ");
                 xVec.add(x - lastTop);
                 lastTop = x;
             } else {
-                //System.out.print("bot ");
                 xVec.add(lastBot - x);
                 lastBot = x;
             }
         }
-        //System.out.println();
 
         xVec.add(maxX - lastTop);
         xVec.add(lastBot - maxX);
 
         double lastLeft = minY, lastRight = minY;
 
-        //System.out.print("y: ");
         for (int i = 1; i < n - 1; i++) {
             double y = yPool.get(i);
 
             if (RAND.nextBoolean()) {
-                //System.out.print("left ");
                 yVec.add(y - lastLeft);
                 lastLeft = y;
             } else {
-                //System.out.print("right ");
                 yVec.add(lastRight - y);
                 lastRight = y;
             }
         }
-        //System.out.println();
 
         yVec.add(maxY - lastLeft);
         yVec.add(lastRight - maxY);
 
-        //System.out.println("xVec: " + xVec);
-        //System.out.println("yVec: " + yVec);
-        // Shuffly y components
+        // Randomly pair up the X- and Y-components
         Collections.shuffle(yVec);
 
-        //System.out.println("yVec: " + yVec);
-        // Build vectors
+        // Combine the paired up components into vectors
         List<Point2D.Double> vec = new ArrayList<>(n);
 
         for (int i = 0; i < n; i++) {
             vec.add(new Point2D.Double(xVec.get(i), yVec.get(i)));
         }
 
-        //System.out.println("vec: " + vec);
-        // Sort vectors by direction
+        // Sort the vectors by angle
         Collections.sort(vec, Comparator.comparingDouble(v -> Math.atan2(v.getY(), v.getX())));
 
-        //System.out.println("vec: " + vec);
-        // Lay vectors end to end
+        // Lay them end-to-end
         double x = 0, y = 0;
         double minPolygonX = 0;
         double minPolygonY = 0;
+        List<Point2D.Double> points = new ArrayList<>(n);
 
         for (int i = 0; i < n; i++) {
             points.add(new Point2D.Double(x, y));
@@ -200,8 +183,7 @@ public class ConvexPointset {
             minPolygonY = Math.min(minPolygonY, y);
         }
 
-        //System.out.println("points: " + points);
-        // Translate points into original bounding box
+        // Move the polygon to the original min and max coordinates
         double xShift = minX - minPolygonX;
         double yShift = minY - minPolygonY;
 
@@ -210,7 +192,6 @@ public class ConvexPointset {
             points.set(i, new Point2D.Double(p.x + xShift, p.y + yShift));
         }
 
-        //System.out.println("points: " + points);
         return points;
     }
 
@@ -273,12 +254,12 @@ public class ConvexPointset {
         int tests = 10000 / n;
         Instant start, end;
 
-        /*start = Instant.now();
+        start = Instant.now();
         for (int i = 0; i < tests; i++) {
-            generatePointsInConvexPosition1(n);
+            rejectionSampling(n);
         }
         end = Instant.now();
-        System.out.println("Method 1 took " + Duration.between(start, end));*/
+        System.out.println("Method 1 took " + Duration.between(start, end));
 
  /*start = Instant.now();
         for (int i = 0; i < tests; i++) {
@@ -293,6 +274,7 @@ public class ConvexPointset {
         end = Instant.now();
         System.out.println("Method 3 took " + Duration.between(start, end));*/
         //animateDistribution(Algorithm.VALTR, 500, 1000, 250);
-        valtrMethod(8);
+        //valtrMethod(n);
+        //rejectionSampling(n);
     }
 }
