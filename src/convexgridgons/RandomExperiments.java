@@ -20,13 +20,13 @@ public class RandomExperiments {
         System.out.println("Seed: " + seed);
         rand = new Random(seed);
         
-        int n = 4, k = 4;
-        int experiments = 1000000;
+        int n = 19;
+        int experiments = 1;
         
         int nNull = 0;
         
         for (int i = 0; i < experiments; i++) {
-            if (experiment(n, k)) {
+            if (experiment(n)) {
                 nNull++;
             }
         }
@@ -34,13 +34,13 @@ public class RandomExperiments {
         System.out.println(nNull + " / " + experiments + " = " + (nNull / (double) experiments));
     }
     
-    private static boolean experiment(int n, int k) {
+    private static boolean experiment(int n) {
         Set<Double> xCoords = randomSet(n);
         Set<Double> yCoords = randomSet(n);
         
-        List<Point2D.Double> polygon = ConvexGridGonFinder.findLargestConvexGridGon(xCoords, yCoords);
+        List<Point2D.Double> polygon = ConvexGridGonFinder.findConvexGridGon(xCoords, yCoords);
         
-        if (polygon.size() < k) {
+        if (polygon == null) {
             double q = computeQuality(xCoords, yCoords);
             
             if (q > bestQ) {
@@ -76,8 +76,8 @@ public class RandomExperiments {
 
     private static Set<Double> randomSet(int n) {
         Set<Double> result = new HashSet<>(n);
-        result.add(0d);
-        result.add(1d);
+        result.add(0.0);
+        result.add(1.0);
         
         for (int i = 0; i < n - 2; i++) {
             result.add(rand.nextDouble());
