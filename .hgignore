@@ -1,5 +1,0 @@
-syntax: glob
-desktop.ini
-nbproject/private/
-build/
-dist/
